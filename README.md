@@ -1,82 +1,133 @@
-# Visual Search Demo
+# VisionSearch: AI-Powered Visual Search Engine
 
-This repository demonstrates a visual search application built using modern web technologies. Below are instructions for setting up the project, editing files, and deploying the application.
+VisionSearch is an intelligent visual search application that leverages Google's SigLIP model to find similar images through advanced embeddings and cosine similarity. Built with FastAPI and modern web technologies, it offers a seamless API for image similarity search.
 
----
-
-## Requirements
-
-Ensure you have the following installed:
-
-- **Node.js** and **npm** ([Install using nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+![image](https://github.com/user-attachments/assets/52a9bb44-1301-48e6-9e0f-e35caad87beb)
 
 ---
 
-## Getting Started Locally
+## ✨ Features  
 
-Follow these steps to set up the project locally:
+- **Image Similarity Search**: Upload an image to find visually similar results from your collection  
+- **Image Database Management**: Add new images to your search database via API  
+- **High Performance**: Utilizes Google's SigLIP-SO400M model with CUDA acceleration  
+- **RESTful API**: Fully documented endpoints for easy integration   
+- **Fast & Scalable**: Optimized pipeline for quick visual search results  
+- **Responsive UI**: Clean, intuitive interface built with modern web frameworks
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 🛠 Tech Stack  
 
-# Step 3: Install the necessary dependencies.
-npm i
+**Frontend**:  
+- React + TypeScript  
+- Vite (Next-gen frontend tooling)  
+- shadcn-ui (Beautiful, accessible components)  
+- Tailwind CSS (Utility-first styling)  
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+**Backend**:  
+- FastAPI (Python backend service)  
+- Google SigLIP-SO400M (State-of-the-art vision-language model)  
+- PyTorch (Deep learning framework)  
+- CUDA (GPU acceleration when available) 
+
+**DevOps**:  
+- GitHub Codespaces (Cloud development environments)  
+- Netlify/Vercel (Deployment hosting)
+
+---
+
+## 🚀 Getting Started  
+
+### Prerequisites  
+- Python 3.10+  
+- NVIDIA GPU with CUDA support (recommended)  
+- pip package manager  
+- NodeJS
+- npm
+
+---
+
+### Getting Started Locally   
+```bash
+# Step 1: Clone the repository. 
+git clone https://github.com/Ionio-io/vision-search-demo.git
+cd vision-search
+
+# Step 2: Create and activate virtual environment.
+python -m venv venv
+source venv/bin/activate  # Linux/MacOS
+venv\Scripts\activate     # Windows
+
+# Step 3: Install dependecies.
+pip install -r requirements.txt
 ```
 
 ---
 
-## Editing Files Directly in GitHub
-
-You can edit files directly in GitHub without cloning the repository:
-
-1. Navigate to the desired file(s) in your GitHub repository.
-2. Click the **Edit** button (pencil icon) at the top right of the file view.
-3. Make your changes and commit them.
+## Running the API
+```bash
+uvicorn main:app --reload
+```
+Access the API at: http://localhost:8000
 
 ---
 
-## Using GitHub Codespaces
-
-GitHub Codespaces provides a cloud-based development environment for this project:
-
-1. Navigate to the main page of your repository.
-2. Click on the **Code** button (green button) near the top right.
-3. Select the **Codespaces** tab.
-4. Click **New codespace** to launch a new Codespace environment.
-5. Edit files directly within Codespaces, then commit and push your changes.
-
-For more details, refer to [GitHub Codespaces Documentation](https://docs.github.com/codespaces).
+## Running the frontend
+```bash
+npm run dev
+```
+This will be accessable at http://localhost:8080
 
 ---
 
-## Technologies Used
+## 📡API Endpoints 
 
-This project is built with:
+-POST /query_image
+-Find similar images to your query
 
-- **Vite**
-- **TypeScript**
-- **React**
-- **shadcn-ui**
-- **Tailwind CSS**
+Request:
+Form-data with file field containing an image
+Response:
+```json
+{
+  "results": [
+    {
+      "path": "string",
+      "similarity": float
+    }
+  ]
+}
+```
 
 ---
 
-## Deployment Instructions
+-POST /add_image
+-Add new image to search database
 
-To deploy this project locally or on a server:
-
-1. Run `python app.py` to start the FastAPI backend and `npm run dev` to start the deployment server.
-2. Use platforms like Netlify for deployment if you want to host under your own domain.
+Request:
+Form-data with file field containing an image
+Response:
+```json
+{
+  "message": "string",
+  "status_code": 200
+}
+```
 
 ---
 
-## Custom Domain Support
+## 🔮 Future Enhancements 
 
-We currently do not support custom domains directly. However, using Netlify is recommended for deploying under a custom domain.
+- Support for custom model fine-tuning
+- Mobile app integration
+- Multi-modal search (text + image)
+- User accounts and search history
+
+## 🤝 Contributing
+
+We welcome contributions! Please:
+- Fork the repository
+- Create a feature branch
+- Submit a pull request
+
