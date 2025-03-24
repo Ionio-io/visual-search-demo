@@ -1,4 +1,4 @@
-# VisionSearch: AI-Powered Visual Search Engine
+# VisualSearch: AI-Powered Visual Search Engine
 
 VisionSearch is an intelligent visual search application that leverages Google's SigLIP model to find similar images through advanced embeddings and cosine similarity. Built with FastAPI and modern web technologies, it offers a seamless API for image similarity search.
 
