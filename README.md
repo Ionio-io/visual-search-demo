@@ -124,6 +124,8 @@ Response:
 - Multi-modal search (text + image)
 - User accounts and search history
 
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Please:
@@ -131,3 +133,8 @@ We welcome contributions! Please:
 - Create a feature branch
 - Submit a pull request
 
+---
+
+##  License
+
+This project is licensed under the Apache 2.0 License. See the LICENSE file for details.
