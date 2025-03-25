@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { toast } from "sonner";
@@ -41,6 +40,7 @@ const Search = () => {
     setIsSearching(true);
     
     try {
+      console.log("Sending search request for image:", fileToSearch);
       const similarImages = await searchSimilarImages(fileToSearch);
       
       // Convert API results to the format expected by ImageGrid
