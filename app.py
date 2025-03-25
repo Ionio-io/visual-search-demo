@@ -1,4 +1,3 @@
-
 import os
 import torch
 import numpy as np
@@ -7,9 +6,10 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
 from transformers import AutoProcessor, AutoModel
 from torch.nn.functional import cosine_similarity
-from typing import List
+from typing import List, Dict, Any
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+import time
 
 app = FastAPI()
 
@@ -35,42 +35,75 @@ model = AutoModel.from_pretrained(
 
 processor = AutoProcessor.from_pretrained("google/siglip-so400m-patch14-384")
 
-def get_image_embeddings(image, model, processor):
+# Global cache for image embeddings
+embedding_cache: Dict[str, Dict[str, Any]] = {}
+
+def get_image_embeddings(image: Image.Image, model: AutoModel, processor: AutoProcessor) -> torch.Tensor:
+    """Helper function to compute image embeddings."""
     with torch.no_grad():
         inputs = processor(images=image, return_tensors="pt").to(device)
         return model.get_image_features(**inputs)
 
-def load_default_images():
+def load_default_images() -> List[str]:
+    """Load paths of default images from the directory."""
     target_paths = []
-    if os.path.exists("./default_images"):
-        for file in os.listdir("./default_images"):
+    default_dir = "./default_images"
+    if os.path.exists(default_dir):
+        for file in os.listdir(default_dir):
             if file.lower().endswith(('png', 'jpg', 'jpeg')):
-                target_paths.append(os.path.join("./default_images", file))
+                target_paths.append(os.path.join(default_dir, file))
     return target_paths
 
 class SearchResult(BaseModel):
     path: str
     similarity: float
 
-@app.post("/query_image")  # Changed from GET to POST since we're receiving file data
+@app.post("/query_image")
 async def query_image(file: UploadFile = File(...)):
+    # Process query image
     query_img = Image.open(file.file).convert("RGB")
     query_emb = get_image_embeddings(query_img, model, processor)
     
+    # Get target image paths and update cache
     target_paths = load_default_images()
     if not target_paths:
         return JSONResponse(content={"error": "No images found in default database!"}, status_code=404)
     
+    # Prune cache for deleted images
+    global embedding_cache
+    current_paths = set(target_paths)
+    for path in list(embedding_cache.keys()):
+        if path not in current_paths:
+            del embedding_cache[path]
+    
+    # Process target images with caching
     similarities = []
     for path in target_paths:
         try:
-            img = Image.open(path).convert("RGB")
-            emb = get_image_embeddings(img, model, processor)
+            # Get current modification time
+            current_mtime = os.path.getmtime(path)
+            
+            # Check cache validity
+            cached = embedding_cache.get(path)
+            if cached and cached["mtime"] == current_mtime:
+                emb = cached["embedding"]
+            else:
+                # Compute and cache embedding if not valid
+                img = Image.open(path).convert("RGB")
+                emb = get_image_embeddings(img, model, processor)
+                embedding_cache[path] = {
+                    "embedding": emb,
+                    "mtime": current_mtime
+                }
+            
+            # Calculate similarity
             sim = cosine_similarity(query_emb, emb).item()
             similarities.append((sim, path))
+            
         except Exception as e:
             return JSONResponse(content={"error": f"Error processing {path}: {str(e)}"}, status_code=500)
     
+    # Return top 3 results
     top_3_matches = sorted(similarities, key=lambda x: x[0], reverse=True)[:3]
     results = [SearchResult(path=path, similarity=float(score)) for score, path in top_3_matches]
     
@@ -78,13 +111,14 @@ async def query_image(file: UploadFile = File(...)):
 
 @app.post("/add_image")
 async def add_image(file: UploadFile = File(...)):
+    # Validate file type
     if not file.filename.lower().endswith(('png', 'jpg', 'jpeg')):
-        raise HTTPException(status_code=400, detail="Invalid file type. Only PNG, JPG, and JPEG are allowed.")
+        raise HTTPException(status_code=400, detail="Invalid file type.")
     
-    default_images_dir = "./default_images"
-    os.makedirs(default_images_dir, exist_ok=True)
-    
-    file_path = os.path.join(default_images_dir, file.filename)
+    # Save to default images directory
+    default_dir = "./default_images"
+    os.makedirs(default_dir, exist_ok=True)
+    file_path = os.path.join(default_dir, file.filename)
     
     try:
         contents = await file.read()
@@ -93,7 +127,7 @@ async def add_image(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
     
-    return JSONResponse(content={"message": f"Image {file.filename} added successfully to default images folder"}, status_code=200)
+    return {"message": f"Image {file.filename} added successfully"}
 
 if __name__ == "__main__":
     import uvicorn
